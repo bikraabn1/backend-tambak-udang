@@ -1,3 +1,5 @@
+
+
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -6,54 +8,60 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-app.use(cors({
-  origin : 'http://localhost:3000',
-  methods : ['GET', 'POST', 'POST']
-}));
+app.use(cors());
 app.use(express.json());
 app.get('/', (req, res) => {
   res.send('Web Server is running');
 })
 
-// Fungsi untuk menghasilkan data acak
 function generateRandomData(id) {
-  const tds = Math.floor(Math.random() * 100); // Nilai acak untuk tds antara 0-99
-  const ph = (Math.random() * 14).toFixed(2); // Nilai acak untuk ph antara 0.00-14.00
-  const color = Math.floor(Math.random() * 16777215).toString(16).toUpperCase(); // Warna acak dalam format hex
-  const time = new Date().toISOString(); // Waktu saat ini dalam format ISO
+  const tds = Math.floor(Math.random() * 300); 
+  const ph = (Math.random() * 14).toFixed(2); 
+  const color = Math.floor(Math.random() * 16777215).toString(16).toUpperCase(); 
+  const time = new Date().toISOString(); 
+  const doValue = (Math.random() * 14).toFixed(2); 
+  const temp = (Math.random() * 40).toFixed(2); 
+  const sal = (Math.random() * 50).toFixed(2); 
 
-  return { id, tds, ph, color, time };
+  return { id, tds, ph, color, time, doValue, temp, sal };
 }
 
-// Event WebSocket untuk koneksi klien
 wss.on('connection', (ws) => {
   console.log('New Client Connected');
 
-  // Kirim pesan awal ke klien
-  ws.send('Welcome to WebSocket server!');
-
-  // Terima pesan dari klien
   ws.on('message', (message) => {
     console.log(`Received: ${message}`);
-
-    // Kirim respons ke klien
-    ws.send(`Server received: ${message}`);
+    
+    ws.send(JSON.stringify({
+      type: 'response',
+      message: `Server received: ${message}`,
+      timestamp: new Date().toISOString()
+    }));
   });
 
-  // Event saat koneksi klien terputus
   ws.on('close', () => {
     console.log('Client disconnected');
   });
 
-  // Kirim data acak setiap detik
-  let idCounter = 1; // Counter untuk ID
-  setInterval(() => {
-    const randomData = generateRandomData(idCounter++);
-    ws.send(JSON.stringify(randomData));
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+
+  let idCounter = 1;
+  const dataInterval = setInterval(() => {
+    if (ws.readyState === ws.OPEN) {
+      const randomData = generateRandomData(idCounter++);
+      ws.send(JSON.stringify(randomData));
+    } else {
+      clearInterval(dataInterval);
+    }
   }, 1000);
+
+  ws.on('close', () => {
+    clearInterval(dataInterval);
+  });
 });
 
-// Menjalankan server HTTP dan WebSocket
 const PORT = 5500;
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
