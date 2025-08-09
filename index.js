@@ -15,8 +15,8 @@ app.get('/', (req, res) => {
 })
 
 function generateRandomData(id) {
-  const tds = Math.floor(Math.random() * 300); 
-  const ph = (Math.random() * 14).toFixed(2); 
+  const tds = Math.floor(Math.random() * 35000); 
+  const ph = (Math.random() * 10).toFixed(2); 
   const color = Math.floor(Math.random() * 16777215).toString(16).toUpperCase(); 
   const time = new Date().toISOString(); 
   const doValue = (Math.random() * 14).toFixed(2); 
